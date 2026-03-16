@@ -1,1216 +1,1627 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>💪 Дневник тренировок</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
-<style>
-:root {
-  --bg:       #0e0e0e;
-  --surface:  #161616;
-  --border:   #2a2a2a;
-  --accent:   #d4f000;
-  --accent2:  #ff4b4b;
-  --text:     #f0f0f0;
-  --muted:    #666;
-  --cardio:   #f5a623;
-  --strength: #4adeaa;
-  --time:     #c084fc;
-  --radius:   10px;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>💪 Дневник тренировок</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+    <style>
+        :root {
+            --bg: #0e0e0e;
+            --surface: #161616;
+            --border: #2a2a2a;
+            --accent: #d4f000;
+            --accent2: #ff4b4b;
+            --text: #f0f0f0;
+            --muted: #666;
+            --cardio: #f5a623;
+            --strength: #4adeaa;
+            --time: #c084fc;
+            --radius: 10px;
+        }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-body {
-  font-family: 'IBM Plex Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-/* ── HEADER ───────────────────────────────────── */
-.header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-.header-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  letter-spacing: 2px;
-  color: var(--accent);
-  line-height: 1;
-}
-.header-actions { display: flex; gap: 8px; }
-.icon-btn {
-  background: var(--border);
-  border: none;
-  color: var(--text);
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
-}
-.icon-btn:active { background: #3a3a3a; }
+        /* ── HEADER ───────────────────────────────────── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
 
-/* ── TABS ─────────────────────────────────────── */
-.tabs-wrap {
-  background: var(--surface);
-  border-bottom: 2px solid var(--border);
-  padding: 10px 12px;
-  display: flex;
-  gap: 6px;
-  overflow-x: scroll;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  touch-action: pan-x;
-  will-change: scroll-position;
-}
-.tabs-wrap::-webkit-scrollbar { display: none; }
-.tab {
-  flex-shrink: 0;
-  padding: 7px 13px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-.tab.active {
-  background: var(--accent);
-  color: #000;
-  border-color: var(--accent);
-}
+        .header-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            letter-spacing: 2px;
+            color: var(--accent);
+            line-height: 1;
+        }
 
-/* ── WORKOUT VIEW ─────────────────────────────── */
-.content { padding: 14px; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
 
-.workout-badge {
-  display: inline-block;
-  background: var(--border);
-  color: var(--muted);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-}
-.workout-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 22px;
-  letter-spacing: 1px;
-  line-height: 1.2;
-  margin-bottom: 14px;
-}
+        .icon-btn {
+            background: var(--border);
+            border: none;
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
 
-/* Exercise list items */
-.ex-list { margin-bottom: 16px; }
-.ex-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius);
-  margin-bottom: 5px;
-  border-left: 3px solid var(--border);
-  background: var(--surface);
-  position: relative;
-}
-.ex-item.cardio  { border-left-color: var(--cardio); }
-.ex-item.strength{ border-left-color: var(--strength); }
-.ex-item.time    { border-left-color: var(--time); }
-.ex-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
-.ex-name { font-size: 13px; flex: 1; line-height: 1.3; }
-.ex-scheme {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  flex-shrink: 0;
-}
+            .icon-btn:active {
+                background: #3a3a3a;
+            }
 
-/* ── BUTTONS ──────────────────────────────────── */
-.btn {
-  width: 100%;
-  padding: 14px;
-  border: none;
-  border-radius: var(--radius);
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.btn:active { opacity: 0.8; transform: scale(0.98); }
-.btn-primary { background: var(--accent); color: #000; }
-.btn-danger  { background: var(--accent2); color: #fff; }
-.btn-ghost   { background: var(--border); color: var(--text); }
+        /* ── TABS ─────────────────────────────────────── */
+        .tabs-wrap {
+            background: var(--surface);
+            border-bottom: 2px solid var(--border);
+            padding: 10px 12px;
+            display: flex;
+            gap: 6px;
+            overflow-x: scroll;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            touch-action: pan-x;
+            will-change: scroll-position;
+        }
 
-/* ── HISTORY ──────────────────────────────────── */
-.section-label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 20px 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
+            .tabs-wrap::-webkit-scrollbar {
+                display: none;
+            }
 
-.session-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 13px 14px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-.session-card:active { border-color: var(--accent); }
-.session-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-.session-date {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-.session-weight {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  color: var(--accent);
-  font-weight: 600;
-}
-.session-note {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.empty-msg {
-  text-align: center;
-  color: var(--muted);
-  padding: 30px 0;
-  font-size: 14px;
-}
+        .tab {
+            flex-shrink: 0;
+            padding: 7px 13px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
 
-/* ── OVERLAYS ─────────────────────────────────── */
-.overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 200;
-  overflow-y: auto;
-  max-width: 480px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-}
-.overlay.visible { display: block; }
+            .tab.active {
+                background: var(--accent);
+                color: #000;
+                border-color: var(--accent);
+            }
 
-.overlay-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 13px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.back-btn {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 28px;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  width: 30px;
-  flex-shrink: 0;
-}
-.overlay-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 1px;
-  flex: 1;
-  line-height: 1.2;
-}
+        /* ── WORKOUT VIEW ─────────────────────────────── */
+        .content {
+            padding: 14px;
+        }
 
-.overlay-body { padding: 14px; }
+        .workout-badge {
+            display: inline-block;
+            background: var(--border);
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
 
-/* ── FORM ─────────────────────────────────────── */
-.form-row { display: flex; gap: 10px; margin-bottom: 14px; }
-.form-group { flex: 1; }
-.form-group label {
-  display: block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-.form-input {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.form-input:focus { border-color: var(--accent); }
-textarea.form-input { resize: none; }
+        .workout-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
 
-/* ── EXERCISE LOG CARDS ───────────────────────── */
-.ex-log-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 13px;
-  margin-bottom: 10px;
-}
-.ex-log-card-name {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ex-log-card-name .tag {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-}
-.tag-cardio   { background: rgba(245,166,35,0.15);  color: var(--cardio);   border: 1px solid rgba(245,166,35,0.3); }
-.tag-strength { background: rgba(74,222,170,0.1);   color: var(--strength); border: 1px solid rgba(74,222,170,0.3); }
-.tag-time     { background: rgba(192,132,252,0.1);  color: var(--time);     border: 1px solid rgba(192,132,252,0.3);}
+        /* Exercise list items */
+        .ex-list {
+            margin-bottom: 16px;
+        }
 
-/* Sets grid for strength */
-.sets-table { width: 100%; border-collapse: collapse; }
-.sets-table th {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 4px 6px;
-  text-align: center;
-}
-.sets-table th:first-child { text-align: left; width: 40px; }
-.sets-table td { padding: 3px 4px; }
-.set-num {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-  text-align: left;
-}
-.set-input {
-  width: 100%;
-  background: #1e1e1e;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 4px;
-  color: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
-  text-align: center;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.set-input:focus { border-color: var(--accent); }
+        .ex-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: var(--radius);
+            margin-bottom: 5px;
+            border-left: 3px solid var(--border);
+            background: var(--surface);
+            position: relative;
+        }
 
-.cardio-inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.cardio-inline .set-input { width: 80px; }
-.cardio-inline span {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-}
+            .ex-item.cardio {
+                border-left-color: var(--cardio);
+            }
 
-/* ── DETAIL VIEW ──────────────────────────────── */
-.detail-meta {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.detail-meta-left { display: flex; flex-direction: column; gap: 4px; }
-.meta-date {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  letter-spacing: 1px;
-}
-.meta-weight {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  color: var(--accent);
-}
+            .ex-item.strength {
+                border-left-color: var(--strength);
+            }
 
-.detail-ex {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 8px;
-}
-.detail-ex-name {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-.detail-set {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  border-top: 1px solid var(--border);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
-}
-.detail-set .val {
-  color: var(--text);
-  font-weight: 600;
-}
-.detail-note {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--muted);
-}
+            .ex-item.time {
+                border-left-color: var(--time);
+            }
 
-/* ── SETTINGS PANEL ───────────────────────────── */
-.settings-panel {
-  display: none;
-  padding: 16px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  animation: slideDown 0.15s ease;
-}
-.settings-panel.visible { display: block; }
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.settings-row { display: flex; gap: 8px; }
-.settings-row .btn { font-size: 14px; padding: 11px; }
+        .ex-icon {
+            font-size: 14px;
+            width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+            line-height: 1;
+        }
 
-/* ── LOADING ──────────────────────────────────── */
-.loading-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  gap: 14px;
-}
-.loading-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 36px;
-  letter-spacing: 4px;
-  color: var(--accent);
-}
-.loading-sub { font-size: 13px; color: var(--muted); }
-.spinner {
-  width: 24px; height: 24px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+        .ex-name {
+            font-size: 13px;
+            flex: 1;
+            line-height: 1.3;
+        }
 
-/* ── MISC ─────────────────────────────────────── */
-.spacer { height: 20px; }
-.divider { height: 1px; background: var(--border); margin: 14px 0; }
+        .ex-scheme {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.7);
-  cursor: pointer;
-}
-</style>
+        .ex-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+            .ex-actions button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 2px 3px;
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+        /* ── BUTTONS ──────────────────────────────────── */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .btn:active {
+                opacity: 0.8;
+                transform: scale(0.98);
+            }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-danger {
+            background: var(--accent2);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        /* ── HISTORY ──────────────────────────────────── */
+        .section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 20px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .section-label::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--border);
+            }
+
+        .session-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 13px 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+            .session-card:active {
+                border-color: var(--accent);
+            }
+
+        .session-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .session-date {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .session-weight {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .session-note {
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--muted);
+            padding: 30px 0;
+            font-size: 14px;
+        }
+
+        /* ── OVERLAYS ─────────────────────────────────── */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 200;
+            overflow-y: auto;
+            max-width: 480px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+        }
+
+            .overlay.visible {
+                display: block;
+            }
+
+        .overlay-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 13px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            flex-shrink: 0;
+        }
+
+        .overlay-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 1px;
+            flex: 1;
+            line-height: 1.2;
+        }
+
+        .overlay-body {
+            padding: 14px;
+        }
+
+        /* ── FORM ─────────────────────────────────────── */
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+            .form-group label {
+                display: block;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin-bottom: 6px;
+            }
+
+        .form-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+            .form-input:focus {
+                border-color: var(--accent);
+            }
+
+        textarea.form-input {
+            resize: none;
+        }
+
+        /* ── EXERCISE LOG CARDS ───────────────────────── */
+        .ex-log-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 13px;
+            margin-bottom: 10px;
+        }
+
+        .ex-log-card-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .ex-log-card-name .tag {
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                letter-spacing: 0.5px;
+            }
+
+        .tag-cardio {
+            background: rgba(245,166,35,0.15);
+            color: var(--cardio);
+            border: 1px solid rgba(245,166,35,0.3);
+        }
+
+        .tag-strength {
+            background: rgba(74,222,170,0.1);
+            color: var(--strength);
+            border: 1px solid rgba(74,222,170,0.3);
+        }
+
+        .tag-time {
+            background: rgba(192,132,252,0.1);
+            color: var(--time);
+            border: 1px solid rgba(192,132,252,0.3);
+        }
+
+        /* Sets grid for strength */
+        .sets-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .sets-table th {
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+                color: var(--muted);
+                padding: 0 4px 6px;
+                text-align: center;
+            }
+
+                .sets-table th:first-child {
+                    text-align: left;
+                    width: 40px;
+                }
+
+            .sets-table td {
+                padding: 3px 4px;
+            }
+
+        .set-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            text-align: left;
+        }
+
+        .set-input {
+            width: 100%;
+            background: #1e1e1e;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 4px;
+            color: var(--text);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+            .set-input:focus {
+                border-color: var(--accent);
+            }
+
+        .cardio-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .cardio-inline .set-input {
+                width: 80px;
+            }
+
+            .cardio-inline span {
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+        /* ── DETAIL VIEW ──────────────────────────────── */
+        .detail-meta {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-meta-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-date {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 20px;
+            letter-spacing: 1px;
+        }
+
+        .meta-weight {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        .detail-ex {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin-bottom: 8px;
+        }
+
+        .detail-ex-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .detail-set {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+            border-top: 1px solid var(--border);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+            .detail-set .val {
+                color: var(--text);
+                font-weight: 600;
+            }
+
+        .detail-note {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ── SETTINGS PANEL ───────────────────────────── */
+        .settings-panel {
+            display: none;
+            padding: 16px 14px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            animation: slideDown 0.15s ease;
+        }
+
+            .settings-panel.visible {
+                display: block;
+            }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 8px;
+        }
+
+            .settings-row .btn {
+                font-size: 14px;
+                padding: 11px;
+            }
+
+        /* ── LOADING ──────────────────────────────────── */
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            gap: 14px;
+        }
+
+        .loading-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            letter-spacing: 4px;
+            color: var(--accent);
+        }
+
+        .loading-sub {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── MISC ─────────────────────────────────────── */
+        .spacer {
+            height: 20px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 14px 0;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loadingScreen" class="loading-screen">
-  <div class="loading-title">WORKOUT</div>
-  <div class="spinner"></div>
-  <div class="loading-sub">Загрузка базы данных...</div>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none">
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-title">⚡ WORKOUT LOG</div>
-    <div class="header-actions">
-      <button class="icon-btn" onclick="toggleSettings()" title="Настройки">⚙️</button>
+    <!-- LOADING -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-title">WORKOUT</div>
+        <div class="spinner"></div>
+        <div class="loading-sub">Загрузка базы данных...</div>
     </div>
-  </div>
 
-  <!-- SETTINGS PANEL -->
-  <div class="settings-panel" id="settingsPanel">
-    <div class="settings-row">
-      <button class="btn btn-ghost" onclick="exportDB()" style="font-size:13px;padding:11px">
-        📤 Экспорт БД
-      </button>
-      <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()" style="font-size:13px;padding:11px">
-        📥 Импорт БД
-      </button>
-    </div>
-    <input type="file" id="importFile" accept=".db,.sqlite" style="display:none" onchange="importDB(event)">
-    <div style="margin-top:8px">
-      <button class="btn btn-ghost" onclick="exportJSON()" style="font-size:13px;padding:11px">
-        📋 Экспорт JSON
-      </button>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:'IBM Plex Mono',monospace">
-      Данные хранятся в localStorage браузера.<br>
-      Делайте экспорт для резервных копий.
-    </div>
-  </div>
+    <!-- APP -->
+    <div id="app" style="display:none">
 
-  <!-- TABS -->
-  <div class="tabs-wrap" id="tabs"></div>
-
-  <!-- MAIN CONTENT -->
-  <div class="content" id="workoutView">
-    <div class="workout-badge" id="workoutBadge">ТРЕНИРОВКА 1</div>
-    <div class="workout-name" id="workoutName">Загрузка...</div>
-    <div class="ex-list" id="exerciseList"></div>
-    <button class="btn btn-primary" onclick="openLogForm()">+ ЗАПИСАТЬ ТРЕНИРОВКУ</button>
-    <div class="section-label">ИСТОРИЯ</div>
-    <div id="historyList"></div>
-  </div>
-</div>
-
-<!-- ─── OVERLAY: LOG FORM ─────────────────────── -->
-<div class="overlay" id="logOverlay">
-  <div class="overlay-header">
-    <button class="back-btn" onclick="closeLogForm()">‹</button>
-    <div class="overlay-title" id="logFormTitle">НОВАЯ ТРЕНИРОВКА</div>
-  </div>
-  <div class="overlay-body">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Дата</label>
-        <input type="date" id="logDate" class="form-input">
-      </div>
-      <div class="form-group">
-        <label>Вес тела, кг</label>
-        <input type="number" id="logBodyWeight" class="form-input" placeholder="108" step="0.1" min="30" max="300">
-      </div>
-    </div>
-    <div id="exerciseInputs"></div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label>Заметки / самочувствие</label>
-      <textarea id="logNotes" class="form-input" rows="3" placeholder="Как себя чувствовал, что болело, PRs..."></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="saveSession()">💾 СОХРАНИТЬ</button>
-    <div class="spacer"></div>
-  </div>
-</div>
-
-<!-- ─── OVERLAY: SESSION DETAIL ──────────────── -->
-<div class="overlay" id="detailOverlay">
-  <div class="overlay-header">
-    <button class="back-btn" onclick="closeDetail()">‹</button>
-    <div class="overlay-title" id="detailTitle">ТРЕНИРОВКА</div>
-  </div>
-  <div class="overlay-body">
-    <div id="detailContent"></div>
-    <div class="spacer"></div>
-    <button class="btn btn-ghost" onclick="openEditForm()" style="margin-bottom:10px">✏️ РЕДАКТИРОВАТЬ</button>
-    <button class="btn btn-danger" onclick="confirmDelete()">🗑 УДАЛИТЬ ЗАПИСЬ</button>
-    <div class="spacer"></div>
-  </div>
-</div>
-
-<script>
-/* ═══════════════════════════════════════════════
-   WORKOUT DATA
-═══════════════════════════════════════════════ */
-const WORKOUTS = [
-  {
-    id: 1,
-    tab: "ТР.1 НОГИ/ПРЕСС",
-    badge: "ТРЕНИРОВКА 1",
-    name: "Ноги (ягодицы и квадрицепс), пресс",
-    exercises: [
-      { id:  1, name: "Кардиотренажёр",                type: "cardio",   defaultMin: 10 },
-      { id:  2, name: "Приседания со штангой",           type: "strength", sets: 3, reps: "15-20" },
-      { id:  3, name: "Подъём ног в упоре",              type: "strength", sets: 3, reps: "15-20" },
-      { id:  4, name: "Кардиотренажёр",                 type: "cardio",   defaultMin: 10 },
-      { id:  5, name: "Жим ногами в тренажёре",          type: "strength", sets: 3, reps: "15-20" },
-      { id:  6, name: "Скручивания на наклонной лавке",  type: "strength", sets: 3, reps: "15-20" },
-      { id:  7, name: "Кардиотренажёр",                 type: "cardio",   defaultMin: 10 },
-      { id:  8, name: "Выпады с гантелями",              type: "strength", sets: 3, reps: "15-20" },
-      { id:  9, name: "Упражнение «планка»",             type: "time",     sets: 3 },
-    ]
-  },
-  {
-    id: 2,
-    tab: "ТР.2 ГРУДЬ/ТРЦ",
-    badge: "ТРЕНИРОВКА 2",
-    name: "Грудь, трицепс",
-    exercises: [
-      { id: 10, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 11, name: "Жим штанги лёжа классический",          type: "strength", sets: 3, reps: "15-20" },
-      { id: 12, name: "Отжимания от лавки сзади",              type: "strength", sets: 3, reps: "макс" },
-      { id: 13, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 14, name: "Жим гантелями лёжа под углом вверх",    type: "strength", sets: 3, reps: "15-20" },
-      { id: 15, name: "Жим штанги лёжа узким хватом",          type: "strength", sets: 3, reps: "15-20" },
-      { id: 16, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 17, name: "Разводы с гантелями под углом вверх",   type: "strength", sets: 3, reps: "15-20" },
-      { id: 18, name: "Разгибание рук с верхнего блока",        type: "strength", sets: 3, reps: "15-20" },
-    ]
-  },
-  {
-    id: 3,
-    tab: "ТР.3 СПИНА/БЦ",
-    badge: "ТРЕНИРОВКА 3",
-    name: "Спина, бицепс",
-    exercises: [
-      { id: 19, name: "Кардиотренажёр",                             type: "cardio",   defaultMin: 10 },
-      { id: 20, name: "Тяга к груди с верх. блока широким хватом",  type: "strength", sets: 3, reps: "макс" },
-      { id: 21, name: "Сгибание рук в тренажёре",                   type: "strength", sets: 3, reps: "15-20" },
-      { id: 22, name: "Кардиотренажёр",                             type: "cardio",   defaultMin: 10 },
-      { id: 23, name: "Тяга горизонтального блока",                  type: "strength", sets: 3, reps: "15-20" },
-      { id: 24, name: "Сгибание рук с гантелями сидя под углом",     type: "strength", sets: 3, reps: "15-20" },
-      { id: 25, name: "Кардиотренажёр",                             type: "cardio",   defaultMin: 10 },
-      { id: 26, name: "Пуловер лёжа со штангой",                    type: "strength", sets: 3, reps: "15-20" },
-      { id: 27, name: "Сгибание руки сидя через колено",             type: "strength", sets: 3, reps: "15-20" },
-    ]
-  },
-  {
-    id: 4,
-    tab: "ТР.4 НОГИ/ПОЯСН",
-    badge: "ТРЕНИРОВКА 4",
-    name: "Ноги (ягодицы и бицепс бедра), поясница, пресс",
-    exercises: [
-      { id: 28, name: "Кардиотренажёр",                   type: "cardio",   defaultMin: 10 },
-      { id: 29, name: "Наклоны со штангой в смите",        type: "strength", sets: 3, reps: "15-20" },
-      { id: 30, name: "Подъём ног сидя на лавке",          type: "strength", sets: 3, reps: "15-20" },
-      { id: 31, name: "Кардиотренажёр",                   type: "cardio",   defaultMin: 10 },
-      { id: 32, name: "Гиперэкстензия",                   type: "strength", sets: 3, reps: "15-20" },
-      { id: 33, name: "Скручивания на наклонной лавке",    type: "strength", sets: 3, reps: "15-20" },
-      { id: 34, name: "Кардиотренажёр",                   type: "cardio",   defaultMin: 10 },
-      { id: 35, name: "Сгибание ног в тренажёре сидя",    type: "strength", sets: 3, reps: "15-20" },
-      { id: 36, name: "Упражнение «планка»",               type: "time",     sets: 3 },
-    ]
-  },
-  {
-    id: 5,
-    tab: "ТР.5 ПЛЕЧИ/СПН",
-    badge: "ТРЕНИРОВКА 5",
-    name: "Плечи, спина",
-    exercises: [
-      { id: 37, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 38, name: "Жим гантелей сидя",                    type: "strength", sets: 3, reps: "15-20" },
-      { id: 39, name: "Подтягивания в машине смита",           type: "strength", sets: 3, reps: "макс" },
-      { id: 40, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 41, name: "Протяжка с гантелями",                 type: "strength", sets: 3, reps: "15-20" },
-      { id: 42, name: "Тяга с верхнего блока узким хватом",   type: "strength", sets: 3, reps: "15-20" },
-      { id: 43, name: "Кардиотренажёр",                       type: "cardio",   defaultMin: 10 },
-      { id: 44, name: "Махи гантелями в стороны",              type: "strength", sets: 3, reps: "15-20" },
-      { id: 45, name: "Разведение рук назад в тренажёре",      type: "strength", sets: 3, reps: "15-20" },
-    ]
-  },
-];
-
-/* ═══════════════════════════════════════════════
-   DATABASE
-═══════════════════════════════════════════════ */
-let db = null;
-let SQL = null;
-let currentWorkoutId  = 1;
-let activeSessionId   = null;
-let editingSessionId  = null;
-
-async function initDB() {
-  SQL = await initSqlJs({
-    locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
-  });
-
-  const saved = localStorage.getItem('wl_db_v1');
-  if (saved) {
-    try {
-      const bytes = Uint8Array.from(atob(saved), c => c.charCodeAt(0));
-      db = new SQL.Database(bytes);
-    } catch(e) {
-      db = new SQL.Database();
-    }
-  } else {
-    db = new SQL.Database();
-  }
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sessions (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      workout_id  INTEGER NOT NULL,
-      date        TEXT    NOT NULL,
-      body_weight REAL,
-      notes       TEXT,
-      created_at  TEXT    DEFAULT (datetime('now','localtime'))
-    );
-    CREATE TABLE IF NOT EXISTS set_logs (
-      id               INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id       INTEGER NOT NULL,
-      exercise_id      INTEGER NOT NULL,
-      set_number       INTEGER NOT NULL,
-      weight           REAL,
-      reps             INTEGER,
-      duration_seconds INTEGER
-    );
-  `);
-  persistDB();
-}
-
-function persistDB() {
-  const data = db.export();
-  let binary = '';
-  const chunk = 8192;
-  for (let i = 0; i < data.length; i += chunk) {
-    binary += String.fromCharCode(...data.subarray(i, i + chunk));
-  }
-  try {
-    localStorage.setItem('wl_db_v1', btoa(binary));
-  } catch(e) {
-    console.warn('localStorage save failed:', e);
-  }
-}
-
-function dbQuery(sql, params = []) {
-  const res = db.exec(sql, params);
-  if (!res.length) return [];
-  const cols = res[0].columns;
-  return res[0].values.map(row => {
-    const obj = {};
-    cols.forEach((c, i) => obj[c] = row[i]);
-    return obj;
-  });
-}
-
-function dbRun(sql, params = []) {
-  db.run(sql, params);
-}
-
-/* ═══════════════════════════════════════════════
-   RENDER — MAIN VIEW
-═══════════════════════════════════════════════ */
-function renderTabs() {
-  document.getElementById('tabs').innerHTML = WORKOUTS.map(w => `
-    <button class="tab ${w.id === currentWorkoutId ? 'active' : ''}"
-            onclick="selectWorkout(${w.id})">${w.tab}</button>
-  `).join('');
-}
-
-function renderWorkout() {
-  const w = WORKOUTS.find(x => x.id === currentWorkoutId);
-  document.getElementById('workoutBadge').textContent = w.badge;
-  document.getElementById('workoutName').textContent  = w.name;
-
-  let strengthNum = 0;
-  document.getElementById('exerciseList').innerHTML = w.exercises.map(ex => {
-    const isCardio   = ex.type === 'cardio';
-    const isTime     = ex.type === 'time';
-    const isStrength = ex.type === 'strength';
-    if (isStrength || isTime) strengthNum++;
-
-    const icon   = isCardio ? '🏃' : isTime ? '⏱' : '💪';
-    const scheme = isCardio   ? `${ex.defaultMin} мин`
-                  : isTime    ? `${ex.sets}×макс`
-                  : `${ex.sets}×${ex.reps}`;
-    const prefix = isCardio ? '' : `${strengthNum}.`;
-    return `
-      <div class="ex-item ${ex.type}">
-        <span class="ex-icon">${icon}</span>
-        <span class="ex-name"><b>${prefix}</b> ${isCardio ? '' : ''}${ex.name}</span>
-        <span class="ex-scheme">${scheme}</span>
-      </div>
-    `;
-  }).join('');
-
-  renderHistory();
-}
-
-function renderHistory() {
-  const sessions = dbQuery(
-    `SELECT id, date, body_weight, notes FROM sessions
-     WHERE workout_id = ? ORDER BY date DESC, created_at DESC LIMIT 30`,
-    [currentWorkoutId]
-  );
-
-  const el = document.getElementById('historyList');
-  if (!sessions.length) {
-    el.innerHTML = '<div class="empty-msg">Нет записей.<br>Начни тренировку! 💪</div>';
-    return;
-  }
-
-  el.innerHTML = sessions.map(s => {
-    const d = new Date(s.date);
-    const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const weekDay = d.toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase();
-    const notePreview = s.notes ? `<div class="session-note">${s.notes.substring(0,80)}</div>` : '';
-    return `
-      <div class="session-card" onclick="showDetail(${s.id})">
-        <div class="session-card-top">
-          <span class="session-date">${weekDay}, ${dateStr}</span>
-          ${s.body_weight ? `<span class="session-weight">${s.body_weight} кг</span>` : ''}
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-title">⚡ WORKOUT LOG</div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleSettings()" title="Настройки">⚙️</button>
+            </div>
         </div>
-        ${notePreview}
-      </div>
-    `;
-  }).join('');
-}
 
-function selectWorkout(id) {
-  currentWorkoutId = id;
-  renderTabs();
-  renderWorkout();
-  document.getElementById('settingsPanel').classList.remove('visible');
-}
-
-/* ═══════════════════════════════════════════════
-   LOG FORM
-═══════════════════════════════════════════════ */
-function openLogForm(sessionIdToEdit = null) {
-  editingSessionId = sessionIdToEdit;
-
-  // Determine which workout we're working with
-  let workoutId = currentWorkoutId;
-  let existingLogs = {};
-  let existingSess = null;
-
-  if (sessionIdToEdit) {
-    [existingSess] = dbQuery(
-      'SELECT date, body_weight, notes, workout_id FROM sessions WHERE id = ?',
-      [sessionIdToEdit]
-    );
-    if (!existingSess) return;
-    workoutId = existingSess.workout_id;
-
-    // Load existing set logs keyed by exercise_id → set_number
-    const logs = dbQuery(
-      'SELECT exercise_id, set_number, weight, reps, duration_seconds FROM set_logs WHERE session_id = ?',
-      [sessionIdToEdit]
-    );
-    logs.forEach(l => {
-      if (!existingLogs[l.exercise_id]) existingLogs[l.exercise_id] = {};
-      existingLogs[l.exercise_id][l.set_number] = l;
-    });
-  }
-
-  const w = WORKOUTS.find(x => x.id === workoutId);
-  document.getElementById('logFormTitle').textContent =
-    (sessionIdToEdit ? '✏️ ' : '') + w.name.toUpperCase();
-  document.getElementById('logDate').value =
-    existingSess ? existingSess.date : new Date().toISOString().split('T')[0];
-  document.getElementById('logBodyWeight').value =
-    existingSess?.body_weight ?? '';
-  document.getElementById('logNotes').value =
-    existingSess?.notes ?? '';
-
-  // Update save button label
-  document.querySelector('#logOverlay .btn-primary').textContent =
-    sessionIdToEdit ? '💾 СОХРАНИТЬ ИЗМЕНЕНИЯ' : '💾 СОХРАНИТЬ';
-
-  // Build inputs
-  const container = document.getElementById('exerciseInputs');
-  let strengthIdx = 0;
-  container.innerHTML = w.exercises.map(ex => {
-    const isCardio   = ex.type === 'cardio';
-    const isTime     = ex.type === 'time';
-    if (!isCardio) strengthIdx++;
-
-    const tagClass = isCardio ? 'tag-cardio' : isTime ? 'tag-time' : 'tag-strength';
-    const tagText  = isCardio ? 'КАРДИО' : isTime ? 'ВРЕМЯ' : ex.reps;
-    const icon     = isCardio ? '🏃' : isTime ? '⏱' : '💪';
-
-    let inputsHtml = '';
-    const exLogs = existingLogs[ex.id] || {};
-
-    if (isCardio) {
-      const savedMin = exLogs[1] ? Math.round(exLogs[1].duration_seconds / 60) : ex.defaultMin;
-      inputsHtml = `
-        <div class="cardio-inline">
-          <input type="number" class="set-input" id="ex${ex.id}_min"
-                 value="${savedMin}" min="1" max="120">
-          <span>минут</span>
-        </div>`;
-    } else if (isTime) {
-      const rows = Array.from({length: ex.sets}, (_, i) => {
-        const saved = exLogs[i+1]?.duration_seconds ?? '';
-        return `
-          <tr>
-            <td class="set-num">${i+1}</td>
-            <td colspan="2">
-              <input type="number" class="set-input" id="ex${ex.id}_s${i+1}_dur"
-                     placeholder="сек" value="${saved}" min="0" max="3600">
-            </td>
-          </tr>`;
-      }).join('');
-      inputsHtml = `
-        <table class="sets-table">
-          <thead><tr><th>СЕТ</th><th colspan="2">ВРЕМЯ (сек)</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-    } else {
-      const rows = Array.from({length: ex.sets}, (_, i) => {
-        const savedW = exLogs[i+1]?.weight ?? '';
-        const savedR = exLogs[i+1]?.reps   ?? '';
-        return `
-          <tr>
-            <td class="set-num">${i+1}</td>
-            <td><input type="number" class="set-input" id="ex${ex.id}_s${i+1}_w"
-                       placeholder="кг" value="${savedW}" step="0.5" min="0" max="500"></td>
-            <td><input type="number" class="set-input" id="ex${ex.id}_s${i+1}_r"
-                       placeholder="пов" value="${savedR}" min="0" max="200"></td>
-          </tr>`;
-      }).join('');
-      inputsHtml = `
-        <table class="sets-table">
-          <thead><tr><th>СЕТ</th><th>ВЕС КГ</th><th>ПОВТ.</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-    }
-
-    const namePrefix = isCardio ? '' : `${strengthIdx}. `;
-    return `
-      <div class="ex-log-card">
-        <div class="ex-log-card-name">
-          ${icon} ${namePrefix}${ex.name}
-          <span class="tag ${tagClass}">${tagText}</span>
+        <!-- SETTINGS PANEL -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-row">
+                <button class="btn btn-ghost" onclick="exportDB()" style="font-size:13px;padding:11px">
+                    📤 Экспорт БД
+                </button>
+                <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()" style="font-size:13px;padding:11px">
+                    📥 Импорт БД
+                </button>
+            </div>
+            <input type="file" id="importFile" accept=".db,.sqlite" style="display:none" onchange="importDB(event)">
+            <div style="margin-top:8px">
+                <button class="btn btn-ghost" onclick="exportJSON()" style="font-size:13px;padding:11px">
+                    📋 Экспорт JSON
+                </button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;font-family:'IBM Plex Mono',monospace">
+                Данные хранятся в localStorage браузера.<br>
+                Делайте экспорт для резервных копий.
+            </div>
         </div>
-        ${inputsHtml}
-      </div>
-    `;
-  }).join('');
 
-  document.getElementById('logOverlay').classList.add('visible');
-  document.getElementById('logOverlay').scrollTop = 0;
-}
+        <!-- TABS -->
+        <div class="tabs-wrap" id="tabs"></div>
 
-function openEditForm() {
-  if (!activeSessionId) return;
-  const sessId = activeSessionId;
-  closeDetail();
-  openLogForm(sessId);
-}
+        <!-- MAIN CONTENT -->
+        <div class="content" id="workoutView">
+            <div class="workout-badge" id="workoutBadge">ТРЕНИРОВКА 1</div>
+            <div class="workout-name" id="workoutName">Загрузка...</div>
+            <div class="ex-list" id="exerciseList"></div>
+            <button class="btn btn-primary" onclick="openLogForm()">+ ЗАПИСАТЬ ТРЕНИРОВКУ</button>
+            <div class="section-label">ИСТОРИЯ</div>
+            <div id="historyList"></div>
+        </div>
+    </div>
 
-function closeLogForm() {
-  document.getElementById('logOverlay').classList.remove('visible');
-  editingSessionId = null;
-}
+    <!-- ─── OVERLAY: LOG FORM ─────────────────────── -->
+    <div class="overlay" id="logOverlay">
+        <div class="overlay-header">
+            <button class="back-btn" onclick="closeLogForm()">‹</button>
+            <div class="overlay-title" id="logFormTitle">НОВАЯ ТРЕНИРОВКА</div>
+        </div>
+        <div class="overlay-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Дата</label>
+                    <input type="date" id="logDate" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Вес тела, кг</label>
+                    <input type="number" id="logBodyWeight" class="form-input" placeholder="108" step="0.1" min="30" max="300">
+                </div>
+            </div>
+            <div id="exerciseInputs"></div>
+            <div class="form-group" style="margin-bottom:16px">
+                <label>Заметки / самочувствие</label>
+                <textarea id="logNotes" class="form-input" rows="3" placeholder="Как себя чувствовал, что болело, PRs..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveSession()">💾 СОХРАНИТЬ</button>
+            <div class="spacer"></div>
+        </div>
+    </div>
 
-function saveSession() {
-  const date   = document.getElementById('logDate').value;
-  const bw     = parseFloat(document.getElementById('logBodyWeight').value) || null;
-  const notes  = document.getElementById('logNotes').value.trim() || null;
+    <!-- ─── OVERLAY: SESSION DETAIL ──────────────── -->
+    <div class="overlay" id="detailOverlay">
+        <div class="overlay-header">
+            <button class="back-btn" onclick="closeDetail()">‹</button>
+            <div class="overlay-title" id="detailTitle">ТРЕНИРОВКА</div>
+        </div>
+        <div class="overlay-body">
+            <div id="detailContent"></div>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost" onclick="openEditForm()" style="margin-bottom:10px">✏️ РЕДАКТИРОВАТЬ</button>
+            <button class="btn btn-danger" onclick="confirmDelete()">🗑 УДАЛИТЬ ЗАПИСЬ</button>
+            <div class="spacer"></div>
+        </div>
+    </div>
 
-  if (!date) { alert('Укажите дату тренировки'); return; }
+    <script>
+        /* ═══════════════════════════════════════════════
+           WORKOUT DATA
+        ═══════════════════════════════════════════════ */
+        const WORKOUTS = [
+            {
+                id: 1,
+                tab: "ТР.1 НОГИ/ПРЕСС",
+                badge: "ТРЕНИРОВКА 1",
+                name: "Ноги (ягодицы и квадрицепс), пресс",
+                exercises: [
+                    { id: 1, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 2, name: "Приседания со штангой", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 3, name: "Подъём ног в упоре", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 4, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 5, name: "Жим ногами в тренажёре", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 6, name: "Скручивания на наклонной лавке", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 7, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 8, name: "Выпады с гантелями", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 9, name: "Упражнение «планка»", type: "time", sets: 3 },
+                ]
+            },
+            {
+                id: 2,
+                tab: "ТР.2 ГРУДЬ/ТРЦ",
+                badge: "ТРЕНИРОВКА 2",
+                name: "Грудь, трицепс",
+                exercises: [
+                    { id: 10, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 11, name: "Жим штанги лёжа классический", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 12, name: "Отжимания от лавки сзади", type: "strength", sets: 3, reps: "макс" },
+                    { id: 13, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 14, name: "Жим гантелями лёжа под углом вверх", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 15, name: "Жим штанги лёжа узким хватом", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 16, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 17, name: "Разводы с гантелями под углом вверх", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 18, name: "Разгибание рук с верхнего блока", type: "strength", sets: 3, reps: "15-20" },
+                ]
+            },
+            {
+                id: 3,
+                tab: "ТР.3 СПИНА/БЦ",
+                badge: "ТРЕНИРОВКА 3",
+                name: "Спина, бицепс",
+                exercises: [
+                    { id: 19, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 20, name: "Тяга к груди с верх. блока широким хватом", type: "strength", sets: 3, reps: "макс" },
+                    { id: 21, name: "Сгибание рук в тренажёре", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 22, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 23, name: "Тяга горизонтального блока", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 24, name: "Сгибание рук с гантелями сидя под углом", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 25, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 26, name: "Пуловер лёжа со штангой", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 27, name: "Сгибание руки сидя через колено", type: "strength", sets: 3, reps: "15-20" },
+                ]
+            },
+            {
+                id: 4,
+                tab: "ТР.4 НОГИ/ПОЯСН",
+                badge: "ТРЕНИРОВКА 4",
+                name: "Ноги (ягодицы и бицепс бедра), поясница, пресс",
+                exercises: [
+                    { id: 28, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 29, name: "Наклоны со штангой в смите", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 30, name: "Подъём ног сидя на лавке", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 31, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 32, name: "Гиперэкстензия", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 33, name: "Скручивания на наклонной лавке", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 34, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 35, name: "Сгибание ног в тренажёре сидя", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 36, name: "Упражнение «планка»", type: "time", sets: 3 },
+                ]
+            },
+            {
+                id: 5,
+                tab: "ТР.5 ПЛЕЧИ/СПН",
+                badge: "ТРЕНИРОВКА 5",
+                name: "Плечи, спина",
+                exercises: [
+                    { id: 37, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 38, name: "Жим гантелей сидя", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 39, name: "Подтягивания в машине смита", type: "strength", sets: 3, reps: "макс" },
+                    { id: 40, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 41, name: "Протяжка с гантелями", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 42, name: "Тяга с верхнего блока узким хватом", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 43, name: "Кардиотренажёр", type: "cardio", defaultMin: 10 },
+                    { id: 44, name: "Махи гантелями в стороны", type: "strength", sets: 3, reps: "15-20" },
+                    { id: 45, name: "Разведение рук назад в тренажёре", type: "strength", sets: 3, reps: "15-20" },
+                ]
+            },
+        ];
 
-  let sessionId;
-  let workoutId;
+        /* CUSTOM WORKOUT NAMES */
+        function loadCustomNames() {
+            try { return JSON.parse(localStorage.getItem('wl_custom_names') || '{}'); }
+            catch (e) { return {}; }
+        }
+        function saveCustomName(workoutId, name) {
+            const names = loadCustomNames();
+            names[workoutId] = name.trim();
+            localStorage.setItem('wl_custom_names', JSON.stringify(names));
+        }
+        function getWorkoutName(workoutId) {
+            const names = loadCustomNames();
+            const w = WORKOUTS.find(x => x.id === workoutId);
+            return names[workoutId] || w.name;
+        }
 
-  if (editingSessionId) {
-    // UPDATE existing session
-    sessionId = editingSessionId;
-    dbRun(
-      'UPDATE sessions SET date = ?, body_weight = ?, notes = ? WHERE id = ?',
-      [date, bw, notes, sessionId]
-    );
-    // Fetch workout_id for this session
-    workoutId = dbQuery('SELECT workout_id FROM sessions WHERE id = ?', [sessionId])[0].workout_id;
-    // Delete old set_logs so we can re-insert fresh ones
-    dbRun('DELETE FROM set_logs WHERE session_id = ?', [sessionId]);
-  } else {
-    // INSERT new session
-    workoutId = currentWorkoutId;
-    dbRun(
-      'INSERT INTO sessions (workout_id, date, body_weight, notes) VALUES (?, ?, ?, ?)',
-      [workoutId, date, bw, notes]
-    );
-    sessionId = dbQuery('SELECT last_insert_rowid() as id')[0].id;
-  }
+        function loadCustomTabs() {
+            try { return JSON.parse(localStorage.getItem('wl_custom_tabs') || '{}'); }
+            catch (e) { return {}; }
+        }
+        function saveCustomTab(workoutId, label) {
+            const tabs = loadCustomTabs();
+            tabs[workoutId] = label.trim();
+            localStorage.setItem('wl_custom_tabs', JSON.stringify(tabs));
+        }
+        function getWorkoutTab(workoutId) {
+            const tabs = loadCustomTabs();
+            if (tabs[workoutId]) return tabs[workoutId];
+            const names = loadCustomNames();
+            const w = WORKOUTS.find(x => x.id === workoutId);
+            if (!names[workoutId]) return w.tab;
+            const short = names[workoutId].substring(0, 10).toUpperCase();
+            return 'ТР.' + workoutId + ' ' + short;
+        }
 
-  const w = WORKOUTS.find(x => x.id === workoutId);
-  for (const ex of w.exercises) {
-    if (ex.type === 'cardio') {
-      const el = document.getElementById(`ex${ex.id}_min`);
-      const v  = parseFloat(el?.value);
-      if (v > 0) {
-        dbRun(
-          'INSERT INTO set_logs (session_id, exercise_id, set_number, duration_seconds) VALUES (?,?,?,?)',
-          [sessionId, ex.id, 1, Math.round(v * 60)]
+
+        /* ═══════════════════════════════════════════════
+           DATABASE
+        ═══════════════════════════════════════════════ */
+        let db = null;
+        let SQL = null;
+        let currentWorkoutId = 1;
+        let activeSessionId = null;
+        let editingSessionId = null;
+
+        async function initDB() {
+            SQL = await initSqlJs({
+                locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
+            });
+
+            const saved = localStorage.getItem('wl_db_v1');
+            if (saved) {
+                try {
+                    const bytes = Uint8Array.from(atob(saved), c => c.charCodeAt(0));
+                    db = new SQL.Database(bytes);
+                } catch (e) {
+                    db = new SQL.Database();
+                }
+            } else {
+                db = new SQL.Database();
+            }
+
+            db.run(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          workout_id  INTEGER NOT NULL,
+          date        TEXT    NOT NULL,
+          body_weight REAL,
+          notes       TEXT,
+          created_at  TEXT    DEFAULT (datetime('now','localtime'))
         );
-      }
-    } else if (ex.type === 'time') {
-      for (let i = 1; i <= ex.sets; i++) {
-        const el = document.getElementById(`ex${ex.id}_s${i}_dur`);
-        const v  = parseInt(el?.value);
-        if (v > 0) {
-          dbRun(
-            'INSERT INTO set_logs (session_id, exercise_id, set_number, duration_seconds) VALUES (?,?,?,?)',
-            [sessionId, ex.id, i, v]
-          );
+        CREATE TABLE IF NOT EXISTS set_logs (
+          id               INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id       INTEGER NOT NULL,
+          exercise_id      INTEGER NOT NULL,
+          set_number       INTEGER NOT NULL,
+          weight           REAL,
+          reps             INTEGER,
+          duration_seconds INTEGER
+        );
+      `);
+            persistDB();
         }
-      }
-    } else {
-      for (let i = 1; i <= ex.sets; i++) {
-        const wEl = document.getElementById(`ex${ex.id}_s${i}_w`);
-        const rEl = document.getElementById(`ex${ex.id}_s${i}_r`);
-        const wv  = parseFloat(wEl?.value);
-        const rv  = parseInt(rEl?.value);
-        if (!isNaN(wv) && wv >= 0 || !isNaN(rv) && rv > 0) {
-          dbRun(
-            'INSERT INTO set_logs (session_id, exercise_id, set_number, weight, reps) VALUES (?,?,?,?,?)',
-            [sessionId, ex.id, i,
-             !isNaN(wv) && wv >= 0 ? wv : null,
-             !isNaN(rv) && rv > 0  ? rv : null]
-          );
+
+        function persistDB() {
+            const data = db.export();
+            let binary = '';
+            const chunk = 8192;
+            for (let i = 0; i < data.length; i += chunk) {
+                binary += String.fromCharCode(...data.subarray(i, i + chunk));
+            }
+            try {
+                localStorage.setItem('wl_db_v1', btoa(binary));
+            } catch (e) {
+                console.warn('localStorage save failed:', e);
+            }
         }
-      }
-    }
-  }
 
-  persistDB();
-  closeLogForm();
-  renderHistory();
-}
+        function dbQuery(sql, params = []) {
+            const res = db.exec(sql, params);
+            if (!res.length) return [];
+            const cols = res[0].columns;
+            return res[0].values.map(row => {
+                const obj = {};
+                cols.forEach((c, i) => obj[c] = row[i]);
+                return obj;
+            });
+        }
 
-/* ═══════════════════════════════════════════════
-   SESSION DETAIL
-═══════════════════════════════════════════════ */
-function showDetail(sessionId) {
-  activeSessionId = sessionId;
+        function dbRun(sql, params = []) {
+            db.run(sql, params);
+        }
 
-  const [sess] = dbQuery(
-    'SELECT date, body_weight, notes, workout_id FROM sessions WHERE id = ?',
-    [sessionId]
-  );
-  if (!sess) return;
+        /* ═══════════════════════════════════════════════
+           RENDER — MAIN VIEW
+        ═══════════════════════════════════════════════ */
+        function renderTabs() {
+            document.getElementById('tabs').innerHTML = WORKOUTS.map(w => `
+        <button class="tab ${w.id === currentWorkoutId ? 'active' : ''}"
+                onclick="selectWorkout(${w.id})">${getWorkoutTab(w.id)}</button>
+      `).join('');
+        }
 
-  const w       = WORKOUTS.find(x => x.id === sess.workout_id);
-  const d       = new Date(sess.date);
-  const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-  const wdStr   = d.toLocaleDateString('ru-RU', { weekday: 'long' });
+        function loadCustomExNames() {
+            try { return JSON.parse(localStorage.getItem('wl_custom_ex') || '{}'); }
+            catch (e) { return {}; }
+        }
+        function saveCustomExName(exId, name) {
+            const d = loadCustomExNames();
+            d[exId] = name.trim();
+            localStorage.setItem('wl_custom_ex', JSON.stringify(d));
+        }
+        function getExName(ex) {
+            const d = loadCustomExNames();
+            return d[ex.id] || ex.name;
+        }
 
-  document.getElementById('detailTitle').textContent = `${w.badge} — ${dateStr}`;
+        function loadDeletedEx() {
+            try { return JSON.parse(localStorage.getItem('wl_deleted_ex') || '[]'); }
+            catch (e) { return []; }
+        }
+        function deleteExercise(exId) {
+            const deleted = loadDeletedEx();
+            if (!deleted.includes(exId)) deleted.push(exId);
+            localStorage.setItem('wl_deleted_ex', JSON.stringify(deleted));
+            renderWorkout();
+        }
+        function restoreExercise(exId) {
+            const deleted = loadDeletedEx().filter(id => id !== exId);
+            localStorage.setItem('wl_deleted_ex', JSON.stringify(deleted));
+            renderWorkout();
+        }
+        function isExDeleted(exId) {
+            return loadDeletedEx().includes(exId);
+        }
 
-  const logs = dbQuery(
-    'SELECT exercise_id, set_number, weight, reps, duration_seconds FROM set_logs WHERE session_id = ? ORDER BY exercise_id, set_number',
-    [sessionId]
-  );
+        function renderWorkout() {
+            const w = WORKOUTS.find(x => x.id === currentWorkoutId);
+            document.getElementById('workoutBadge').innerHTML =
+                `<span id="workoutBadgeText">${getWorkoutTab(currentWorkoutId)}</span>` +
+                `<button onclick="startEditTab()" style="background:none;border:none;cursor:pointer;margin-left:6px;font-size:12px;vertical-align:middle;opacity:0.5" title="Переименовать вкладку">✏️</button>`;
+            document.getElementById('workoutName').innerHTML =
+                `<span id="workoutNameText">${getWorkoutName(currentWorkoutId)}</span>` +
+                `<button onclick="startEditName()" style="background:none;border:none;cursor:pointer;margin-left:8px;font-size:16px;vertical-align:middle;opacity:0.5" title="Переименовать">✏️</button>`;
 
-  // Group by exercise
-  const byEx = {};
-  logs.forEach(l => {
-    (byEx[l.exercise_id] = byEx[l.exercise_id] || []).push(l);
-  });
+            let strengthNum = 0;
+            document.getElementById('exerciseList').innerHTML = w.exercises.map(ex => {
+                const isCardio = ex.type === 'cardio';
+                const isTime = ex.type === 'time';
+                const isStrength = ex.type === 'strength';
+                const deleted = isExDeleted(ex.id);
+                if (!deleted && (isStrength || isTime)) strengthNum++;
 
-  let html = `
-    <div class="detail-meta">
-      <div class="detail-meta-left">
-        <div class="meta-date">${wdStr}, ${dateStr}</div>
-        <div style="font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace">${w.name}</div>
-      </div>
-      ${sess.body_weight ? `<div class="meta-weight">⚖️ ${sess.body_weight} кг</div>` : ''}
-    </div>
-  `;
+                const icon = isCardio ? '🏃' : isTime ? '⏱' : '💪';
+                const scheme = isCardio ? `${ex.defaultMin} мин`
+                    : isTime ? `${ex.sets}×макс`
+                        : `${ex.sets}×${ex.reps}`;
+                const prefix = (!isCardio && !deleted) ? `${strengthNum}.` : isCardio ? '' : '–';
+                const displayName = getExName(ex);
 
-  let sIdx = 0;
-  w.exercises.forEach(ex => {
-    const rows = byEx[ex.id];
-    if (!rows?.length) return;
-    if (ex.type !== 'cardio') sIdx++;
+                if (deleted) {
+                    return `
+            <div class="ex-item" id="ex-row-${ex.id}"
+              style="opacity:0.35;text-decoration:line-through;border-left-color:var(--accent2)">
+              <span class="ex-icon">🗑</span>
+              <span class="ex-name" style="flex:1">${displayName}</span>
+              <button onclick="restoreExercise(${ex.id})"
+                style="background:none;border:none;cursor:pointer;font-size:12px;opacity:1;padding:0 4px;flex-shrink:0;color:var(--accent)"
+                title="Восстановить">↩️</button>
+            </div>`;
+                }
 
-    const prefix = ex.type === 'cardio' ? '' : `${sIdx}. `;
-    let setsHtml = rows.map(r => {
-      if (ex.type === 'cardio') {
-        const mins = Math.round(r.duration_seconds / 60);
-        return `<div class="detail-set"><span>⏱ Время:</span><span class="val">${mins} мин</span></div>`;
-      }
-      if (ex.type === 'time') {
-        return `<div class="detail-set"><span>Подход ${r.set_number}:</span><span class="val">${r.duration_seconds} сек</span></div>`;
-      }
-      const parts = [];
-      if (r.weight !== null && r.weight !== undefined) parts.push(`${r.weight} кг`);
-      if (r.reps   !== null && r.reps   !== undefined) parts.push(`${r.reps} пов.`);
-      return `<div class="detail-set"><span>Подход ${r.set_number}:</span><span class="val">${parts.join(' × ') || '—'}</span></div>`;
-    }).join('');
+                return `
+          <div class="ex-item ${ex.type}" id="ex-row-${ex.id}">
+            <span class="ex-icon">${icon}</span>
+            <span class="ex-name"><b>${prefix}</b> ${displayName}</span>
+            <div class="ex-actions">
+              <button onclick="startEditExName(${ex.id})" title="Переименовать"
+                style="font-size:14px;opacity:0.4">✏️</button>
+              <button onclick="deleteExercise(${ex.id})" title="Удалить упражнение"
+                style="font-size:18px;filter:brightness(0) invert(1);opacity:0.8">🗑</button>
+            </div>
+            <span class="ex-scheme">${scheme}</span>
+          </div>
+        `;
+            }).join('');
 
-    const icon = ex.type === 'cardio' ? '🏃' : ex.type === 'time' ? '⏱' : '💪';
-    html += `
-      <div class="detail-ex">
-        <div class="detail-ex-name">${icon} ${prefix}${ex.name}</div>
-        ${setsHtml}
-      </div>
-    `;
-  });
+            renderHistory();
+        }
 
-  if (sess.notes) {
-    html += `
-      <div class="detail-note">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">ЗАМЕТКИ</div>
-        ${sess.notes}
-      </div>
-    `;
-  }
+        function startEditExName(exId) {
+            const ex = WORKOUTS.flatMap(w => w.exercises).find(e => e.id === exId);
+            if (!ex) return;
+            const row = document.getElementById(`ex-row-${exId}`);
+            const cur = getExName(ex);
+            row.innerHTML = `
+        <div style="display:flex;gap:6px;align-items:center;width:100%;padding:2px 0">
+          <input id="exNameInput-${exId}" type="text"
+            value="${cur.replace(/"/g, '&quot;')}"
+            class="form-input"
+            style="flex:1;min-width:0;font-size:13px;padding:6px 8px"
+            maxlength="80"
+            onkeydown="if(event.key==='Enter')confirmEditExName(${exId});if(event.key==='Escape')cancelEditExName()">
+          <button onclick="confirmEditExName(${exId})" class="btn btn-primary"
+            style="width:auto;padding:6px 11px;font-size:13px;flex-shrink:0">✓</button>
+          <button onclick="cancelEditExName()" class="btn btn-ghost"
+            style="width:auto;padding:6px 11px;font-size:13px;flex-shrink:0">✗</button>
+        </div>
+      `;
+            setTimeout(() => {
+                const inp = document.getElementById(`exNameInput-${exId}`);
+                inp.focus();
+                inp.select();
+            }, 50);
+        }
 
-  document.getElementById('detailContent').innerHTML = html;
-  document.getElementById('detailOverlay').classList.add('visible');
-  document.getElementById('detailOverlay').scrollTop = 0;
-}
+        function confirmEditExName(exId) {
+            const inp = document.getElementById(`exNameInput-${exId}`);
+            if (!inp) return;
+            const val = inp.value.trim();
+            if (val) saveCustomExName(exId, val);
+            renderWorkout();
+        }
 
-function closeDetail() {
-  document.getElementById('detailOverlay').classList.remove('visible');
-  activeSessionId = null;
-}
+        function cancelEditExName() {
+            renderWorkout();
+        }
 
-function confirmDelete() {
-  if (!activeSessionId) return;
-  if (!confirm('Удалить эту запись? Это действие необратимо.')) return;
-  dbRun('DELETE FROM set_logs WHERE session_id = ?', [activeSessionId]);
-  dbRun('DELETE FROM sessions WHERE id = ?', [activeSessionId]);
-  persistDB();
-  closeDetail();
-  renderHistory();
-}
+        function renderHistory() {
+            const sessions = dbQuery(
+                `SELECT id, date, body_weight, notes FROM sessions
+         WHERE workout_id = ? ORDER BY date DESC, created_at DESC LIMIT 30`,
+                [currentWorkoutId]
+            );
 
-/* ═══════════════════════════════════════════════
-   SETTINGS / EXPORT / IMPORT
-═══════════════════════════════════════════════ */
-function toggleSettings() {
-  document.getElementById('settingsPanel').classList.toggle('visible');
-}
+            const el = document.getElementById('historyList');
+            if (!sessions.length) {
+                el.innerHTML = '<div class="empty-msg">Нет записей.<br>Начни тренировку! 💪</div>';
+                return;
+            }
 
-function exportDB() {
-  const data = db.export();
-  const blob = new Blob([data], { type: 'application/octet-stream' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const ts   = new Date().toISOString().slice(0,10);
-  a.href     = url;
-  a.download = `workout_log_${ts}.db`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+            el.innerHTML = sessions.map(s => {
+                const d = new Date(s.date);
+                const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+                const weekDay = d.toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase();
+                const notePreview = s.notes ? `<div class="session-note">${s.notes.substring(0, 80)}</div>` : '';
+                return `
+          <div class="session-card" onclick="showDetail(${s.id})">
+            <div class="session-card-top">
+              <span class="session-date">${weekDay}, ${dateStr}</span>
+              ${s.body_weight ? `<span class="session-weight">${s.body_weight} кг</span>` : ''}
+            </div>
+            ${notePreview}
+          </div>
+        `;
+            }).join('');
+        }
 
-function importDB(evt) {
-  const file = evt.target.files[0];
-  if (!file) return;
-  if (!confirm('Заменить текущую базу данных? Текущие данные будут перезаписаны.')) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const bytes = new Uint8Array(e.target.result);
-      db = new SQL.Database(bytes);
-      persistDB();
-      renderWorkout();
-      alert('База данных успешно импортирована!');
-    } catch(err) {
-      alert('Ошибка импорта: ' + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-  evt.target.value = '';
-}
+        function selectWorkout(id) {
+            currentWorkoutId = id;
+            renderTabs();
+            renderWorkout();
+            document.getElementById('settingsPanel').classList.remove('visible');
+        }
 
-function exportJSON() {
-  const sessions = dbQuery('SELECT * FROM sessions ORDER BY date DESC');
-  const setLogs  = dbQuery('SELECT * FROM set_logs');
-  const json     = JSON.stringify({ sessions, setLogs, exportedAt: new Date().toISOString() }, null, 2);
-  const blob     = new Blob([json], { type: 'application/json' });
-  const url      = URL.createObjectURL(blob);
-  const a        = document.createElement('a');
-  const ts       = new Date().toISOString().slice(0,10);
-  a.href         = url;
-  a.download     = `workout_log_${ts}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+        function startEditName() {
+            const current = getWorkoutName(currentWorkoutId);
+            const nameEl = document.getElementById('workoutName');
+            nameEl.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="nameEditInput" type="text"
+            value="${current.replace(/"/g, '&quot;')}"
+            class="form-input"
+            style="flex:1;min-width:0;font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:600;padding:7px 10px"
+            maxlength="80"
+            onkeydown="if(event.key==='Enter')confirmEditName();if(event.key==='Escape')cancelEditName()">
+          <button onclick="confirmEditName()" class="btn btn-primary"
+            style="width:auto;padding:7px 14px;font-size:14px;flex-shrink:0">✓</button>
+          <button onclick="cancelEditName()" class="btn btn-ghost"
+            style="width:auto;padding:7px 14px;font-size:14px;flex-shrink:0">✗</button>
+        </div>
+      `;
+            setTimeout(() => {
+                const inp = document.getElementById('nameEditInput');
+                inp.focus();
+                inp.select();
+            }, 50);
+        }
 
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
-async function init() {
-  try {
-    await initDB();
-    renderTabs();
-    renderWorkout();
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-  } catch(e) {
-    document.querySelector('.loading-sub').textContent = 'Ошибка: ' + e.message;
-  }
-}
+        function confirmEditName() {
+            const inp = document.getElementById('nameEditInput');
+            if (!inp) return;
+            const val = inp.value.trim();
+            if (val) saveCustomName(currentWorkoutId, val);
+            renderTabs();
+            renderWorkout();
+        }
 
-init();
-</script>
+        function cancelEditName() {
+            renderWorkout();
+        }
+
+        function startEditTab() {
+            const current = getWorkoutTab(currentWorkoutId);
+            const badgeEl = document.getElementById('workoutBadge');
+            badgeEl.innerHTML = `
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="tabEditInput" type="text"
+            value="${current.replace(/"/g, '&quot;')}"
+            class="form-input"
+            style="flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;text-transform:uppercase;letter-spacing:0.5px"
+            maxlength="20"
+            placeholder="напр. ТР.1 НОГИ"
+            onkeydown="if(event.key==='Enter')confirmEditTab();if(event.key==='Escape')cancelEditTab()">
+          <button onclick="confirmEditTab()" class="btn btn-primary"
+            style="width:auto;padding:4px 10px;font-size:13px;flex-shrink:0">✓</button>
+          <button onclick="cancelEditTab()" class="btn btn-ghost"
+            style="width:auto;padding:4px 10px;font-size:13px;flex-shrink:0">✗</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace">
+          Это текст вкладки (макс. 20 символов)
+        </div>
+      `;
+            setTimeout(() => {
+                const inp = document.getElementById('tabEditInput');
+                inp.focus();
+                inp.select();
+            }, 50);
+        }
+
+        function confirmEditTab() {
+            const inp = document.getElementById('tabEditInput');
+            if (!inp) return;
+            const val = inp.value.trim();
+            if (val) saveCustomTab(currentWorkoutId, val);
+            renderTabs();
+            renderWorkout();
+        }
+
+        function cancelEditTab() {
+            renderWorkout();
+        }
+
+        /* ═══════════════════════════════════════════════
+           LOG FORM
+        ═══════════════════════════════════════════════ */
+        function openLogForm(sessionIdToEdit = null) {
+            editingSessionId = sessionIdToEdit;
+
+            // Determine which workout we're working with
+            let workoutId = currentWorkoutId;
+            let existingLogs = {};
+            let existingSess = null;
+
+            if (sessionIdToEdit) {
+                [existingSess] = dbQuery(
+                    'SELECT date, body_weight, notes, workout_id FROM sessions WHERE id = ?',
+                    [sessionIdToEdit]
+                );
+                if (!existingSess) return;
+                workoutId = existingSess.workout_id;
+
+                // Load existing set logs keyed by exercise_id → set_number
+                const logs = dbQuery(
+                    'SELECT exercise_id, set_number, weight, reps, duration_seconds FROM set_logs WHERE session_id = ?',
+                    [sessionIdToEdit]
+                );
+                logs.forEach(l => {
+                    if (!existingLogs[l.exercise_id]) existingLogs[l.exercise_id] = {};
+                    existingLogs[l.exercise_id][l.set_number] = l;
+                });
+            }
+
+            const w = WORKOUTS.find(x => x.id === workoutId);
+            document.getElementById('logFormTitle').textContent =
+                (sessionIdToEdit ? '✏️ ' : '') + getWorkoutName(workoutId).toUpperCase();
+            document.getElementById('logDate').value =
+                existingSess ? existingSess.date : new Date().toISOString().split('T')[0];
+            document.getElementById('logBodyWeight').value =
+                existingSess?.body_weight ?? '';
+            document.getElementById('logNotes').value =
+                existingSess?.notes ?? '';
+
+            // Update save button label
+            document.querySelector('#logOverlay .btn-primary').textContent =
+                sessionIdToEdit ? '💾 СОХРАНИТЬ ИЗМЕНЕНИЯ' : '💾 СОХРАНИТЬ';
+
+            // Build inputs
+            const container = document.getElementById('exerciseInputs');
+            let strengthIdx = 0;
+            container.innerHTML = w.exercises.filter(ex => !isExDeleted(ex.id)).map(ex => {
+                const isCardio = ex.type === 'cardio';
+                const isTime = ex.type === 'time';
+                if (!isCardio) strengthIdx++;
+
+                const tagClass = isCardio ? 'tag-cardio' : isTime ? 'tag-time' : 'tag-strength';
+                const tagText = isCardio ? 'КАРДИО' : isTime ? 'ВРЕМЯ' : ex.reps;
+                const icon = isCardio ? '🏃' : isTime ? '⏱' : '💪';
+
+                let inputsHtml = '';
+                const exLogs = existingLogs[ex.id] || {};
+
+                if (isCardio) {
+                    const savedMin = exLogs[1] ? Math.round(exLogs[1].duration_seconds / 60) : ex.defaultMin;
+                    inputsHtml = `
+            <div class="cardio-inline">
+              <input type="number" class="set-input" id="ex${ex.id}_min"
+                     value="${savedMin}" min="1" max="120">
+              <span>минут</span>
+            </div>`;
+                } else if (isTime) {
+                    const rows = Array.from({ length: ex.sets }, (_, i) => {
+                        const saved = exLogs[i + 1]?.duration_seconds ?? '';
+                        return `
+              <tr>
+                <td class="set-num">${i + 1}</td>
+                <td colspan="2">
+                  <input type="number" class="set-input" id="ex${ex.id}_s${i + 1}_dur"
+                         placeholder="сек" value="${saved}" min="0" max="3600">
+                </td>
+              </tr>`;
+                    }).join('');
+                    inputsHtml = `
+            <table class="sets-table">
+              <thead><tr><th>СЕТ</th><th colspan="2">ВРЕМЯ (сек)</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+                } else {
+                    const rows = Array.from({ length: ex.sets }, (_, i) => {
+                        const savedW = exLogs[i + 1]?.weight ?? '';
+                        const savedR = exLogs[i + 1]?.reps ?? '';
+                        return `
+              <tr>
+                <td class="set-num">${i + 1}</td>
+                <td><input type="number" class="set-input" id="ex${ex.id}_s${i + 1}_w"
+                           placeholder="кг" value="${savedW}" step="0.5" min="0" max="500"></td>
+                <td><input type="number" class="set-input" id="ex${ex.id}_s${i + 1}_r"
+                           placeholder="пов" value="${savedR}" min="0" max="200"></td>
+              </tr>`;
+                    }).join('');
+                    inputsHtml = `
+            <table class="sets-table">
+              <thead><tr><th>СЕТ</th><th>ВЕС КГ</th><th>ПОВТ.</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+                }
+
+                const namePrefix = isCardio ? '' : `${strengthIdx}. `;
+                return `
+          <div class="ex-log-card">
+            <div class="ex-log-card-name">
+              ${icon} ${namePrefix}${getExName(ex)}
+              <span class="tag ${tagClass}">${tagText}</span>
+            </div>
+            ${inputsHtml}
+          </div>
+        `;
+            }).join('');
+
+            document.getElementById('logOverlay').classList.add('visible');
+            document.getElementById('logOverlay').scrollTop = 0;
+        }
+
+        function openEditForm() {
+            if (!activeSessionId) return;
+            const sessId = activeSessionId;
+            closeDetail();
+            openLogForm(sessId);
+        }
+
+        function closeLogForm() {
+            document.getElementById('logOverlay').classList.remove('visible');
+            editingSessionId = null;
+        }
+
+        function saveSession() {
+            const date = document.getElementById('logDate').value;
+            const bw = parseFloat(document.getElementById('logBodyWeight').value) || null;
+            const notes = document.getElementById('logNotes').value.trim() || null;
+
+            if (!date) { alert('Укажите дату тренировки'); return; }
+
+            let sessionId;
+            let workoutId;
+
+            if (editingSessionId) {
+                // UPDATE existing session
+                sessionId = editingSessionId;
+                dbRun(
+                    'UPDATE sessions SET date = ?, body_weight = ?, notes = ? WHERE id = ?',
+                    [date, bw, notes, sessionId]
+                );
+                // Fetch workout_id for this session
+                workoutId = dbQuery('SELECT workout_id FROM sessions WHERE id = ?', [sessionId])[0].workout_id;
+                // Delete old set_logs so we can re-insert fresh ones
+                dbRun('DELETE FROM set_logs WHERE session_id = ?', [sessionId]);
+            } else {
+                // INSERT new session
+                workoutId = currentWorkoutId;
+                dbRun(
+                    'INSERT INTO sessions (workout_id, date, body_weight, notes) VALUES (?, ?, ?, ?)',
+                    [workoutId, date, bw, notes]
+                );
+                sessionId = dbQuery('SELECT last_insert_rowid() as id')[0].id;
+            }
+
+            const w = WORKOUTS.find(x => x.id === workoutId);
+            for (const ex of w.exercises) {
+                if (ex.type === 'cardio') {
+                    const el = document.getElementById(`ex${ex.id}_min`);
+                    const v = parseFloat(el?.value);
+                    if (v > 0) {
+                        dbRun(
+                            'INSERT INTO set_logs (session_id, exercise_id, set_number, duration_seconds) VALUES (?,?,?,?)',
+                            [sessionId, ex.id, 1, Math.round(v * 60)]
+                        );
+                    }
+                } else if (ex.type === 'time') {
+                    for (let i = 1; i <= ex.sets; i++) {
+                        const el = document.getElementById(`ex${ex.id}_s${i}_dur`);
+                        const v = parseInt(el?.value);
+                        if (v > 0) {
+                            dbRun(
+                                'INSERT INTO set_logs (session_id, exercise_id, set_number, duration_seconds) VALUES (?,?,?,?)',
+                                [sessionId, ex.id, i, v]
+                            );
+                        }
+                    }
+                } else {
+                    for (let i = 1; i <= ex.sets; i++) {
+                        const wEl = document.getElementById(`ex${ex.id}_s${i}_w`);
+                        const rEl = document.getElementById(`ex${ex.id}_s${i}_r`);
+                        const wv = parseFloat(wEl?.value);
+                        const rv = parseInt(rEl?.value);
+                        if (!isNaN(wv) && wv >= 0 || !isNaN(rv) && rv > 0) {
+                            dbRun(
+                                'INSERT INTO set_logs (session_id, exercise_id, set_number, weight, reps) VALUES (?,?,?,?,?)',
+                                [sessionId, ex.id, i,
+                                    !isNaN(wv) && wv >= 0 ? wv : null,
+                                    !isNaN(rv) && rv > 0 ? rv : null]
+                            );
+                        }
+                    }
+                }
+            }
+
+            persistDB();
+            closeLogForm();
+            renderHistory();
+        }
+
+        /* ═══════════════════════════════════════════════
+           SESSION DETAIL
+        ═══════════════════════════════════════════════ */
+        function showDetail(sessionId) {
+            activeSessionId = sessionId;
+
+            const [sess] = dbQuery(
+                'SELECT date, body_weight, notes, workout_id FROM sessions WHERE id = ?',
+                [sessionId]
+            );
+            if (!sess) return;
+
+            const w = WORKOUTS.find(x => x.id === sess.workout_id);
+            const d = new Date(sess.date);
+            const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            const wdStr = d.toLocaleDateString('ru-RU', { weekday: 'long' });
+
+            document.getElementById('detailTitle').textContent = `${w.badge} — ${dateStr}`;
+
+            const logs = dbQuery(
+                'SELECT exercise_id, set_number, weight, reps, duration_seconds FROM set_logs WHERE session_id = ? ORDER BY exercise_id, set_number',
+                [sessionId]
+            );
+
+            // Group by exercise
+            const byEx = {};
+            logs.forEach(l => {
+                (byEx[l.exercise_id] = byEx[l.exercise_id] || []).push(l);
+            });
+
+            let html = `
+        <div class="detail-meta">
+          <div class="detail-meta-left">
+            <div class="meta-date">${wdStr}, ${dateStr}</div>
+            <div style="font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace">${w.name}</div>
+          </div>
+          ${sess.body_weight ? `<div class="meta-weight">⚖️ ${sess.body_weight} кг</div>` : ''}
+        </div>
+      `;
+
+            let sIdx = 0;
+            w.exercises.forEach(ex => {
+                const rows = byEx[ex.id];
+                if (!rows?.length) return;
+                if (ex.type !== 'cardio') sIdx++;
+
+                const prefix = ex.type === 'cardio' ? '' : `${sIdx}. `;
+                let setsHtml = rows.map(r => {
+                    if (ex.type === 'cardio') {
+                        const mins = Math.round(r.duration_seconds / 60);
+                        return `<div class="detail-set"><span>⏱ Время:</span><span class="val">${mins} мин</span></div>`;
+                    }
+                    if (ex.type === 'time') {
+                        return `<div class="detail-set"><span>Подход ${r.set_number}:</span><span class="val">${r.duration_seconds} сек</span></div>`;
+                    }
+                    const parts = [];
+                    if (r.weight !== null && r.weight !== undefined) parts.push(`${r.weight} кг`);
+                    if (r.reps !== null && r.reps !== undefined) parts.push(`${r.reps} пов.`);
+                    return `<div class="detail-set"><span>Подход ${r.set_number}:</span><span class="val">${parts.join(' × ') || '—'}</span></div>`;
+                }).join('');
+
+                const icon = ex.type === 'cardio' ? '🏃' : ex.type === 'time' ? '⏱' : '💪';
+                html += `
+          <div class="detail-ex">
+            <div class="detail-ex-name">${icon} ${prefix}${ex.name}</div>
+            ${setsHtml}
+          </div>
+        `;
+            });
+
+            if (sess.notes) {
+                html += `
+          <div class="detail-note">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">ЗАМЕТКИ</div>
+            ${sess.notes}
+          </div>
+        `;
+            }
+
+            document.getElementById('detailContent').innerHTML = html;
+            document.getElementById('detailOverlay').classList.add('visible');
+            document.getElementById('detailOverlay').scrollTop = 0;
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('visible');
+            activeSessionId = null;
+        }
+
+        function confirmDelete() {
+            if (!activeSessionId) return;
+            if (!confirm('Удалить эту запись? Это действие необратимо.')) return;
+            dbRun('DELETE FROM set_logs WHERE session_id = ?', [activeSessionId]);
+            dbRun('DELETE FROM sessions WHERE id = ?', [activeSessionId]);
+            persistDB();
+            closeDetail();
+            renderHistory();
+        }
+
+        /* ═══════════════════════════════════════════════
+           SETTINGS / EXPORT / IMPORT
+        ═══════════════════════════════════════════════ */
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('visible');
+        }
+
+        function exportDB() {
+            const data = db.export();
+            const blob = new Blob([data], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `workout_log_${ts}.db`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importDB(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            if (!confirm('Заменить текущую базу данных? Текущие данные будут перезаписаны.')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const bytes = new Uint8Array(e.target.result);
+                    db = new SQL.Database(bytes);
+                    persistDB();
+                    renderWorkout();
+                    alert('База данных успешно импортирована!');
+                } catch (err) {
+                    alert('Ошибка импорта: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            evt.target.value = '';
+        }
+
+        function exportJSON() {
+            const sessions = dbQuery('SELECT * FROM sessions ORDER BY date DESC');
+            const setLogs = dbQuery('SELECT * FROM set_logs');
+            const json = JSON.stringify({ sessions, setLogs, exportedAt: new Date().toISOString() }, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `workout_log_${ts}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* ═══════════════════════════════════════════════
+           INIT
+        ═══════════════════════════════════════════════ */
+        async function init() {
+            try {
+                await initDB();
+                renderTabs();
+                renderWorkout();
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+            } catch (e) {
+                document.querySelector('.loading-sub').textContent = 'Ошибка: ' + e.message;
+            }
+        }
+
+        init();
+    </script>
 </body>
 </html>
